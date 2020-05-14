@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+language: generic
+
+before_install:
+  - docker build -t ryebro/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true ryebro/react-test npm test
+
+after_success:
+  - docker build -t ryebro/multi-client ./client
+  - docker build -t ryebro/multi-nginx ./nginx
+  - docker build -t ryebro/multi-server ./server
+  - docker build -t ryebro/multi-worker ./worker
+  #Login to docker CLI
+  - echo "$DOCKER_PW" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push to docker hub
+  - docker push ryebro/multi-client
+  - docker push ryebro/multi-nginx
+  - docker push ryebro/multi-server
+  - docker push ryebro/multi-worker
